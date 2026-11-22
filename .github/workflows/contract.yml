@@ -146,7 +146,7 @@ jobs:
           Path("/tmp/xdp-pass.bin").write_bytes(ipv4_frame("198.51.100.11"))
           vlan = bytes.fromhex("00112233445566778899aabb810000000800") + ipv4_frame("198.51.100.10")[14:]
           Path("/tmp/xdp-vlan.bin").write_bytes(vlan)
-          Path("/tmp/xdp-truncated.bin").write_bytes(bytes.fromhex("001122334455"))
+          Path("/tmp/xdp-truncated.bin").write_bytes(bytes.fromhex("00112233445566778899aabb0800"))
           PY
 
           run_test() {
