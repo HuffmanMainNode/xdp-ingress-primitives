@@ -84,5 +84,5 @@ jobs:
           set -euo pipefail
           command -v clang
           clang --version
-          clang -target bpf -O2 -g -Wall -Werror -c xdp_ingress.c -o /tmp/xdp_ingress.o
+          clang -I/usr/include/$(uname -m)-linux-gnu -target bpf -O2 -g -Wall -Werror -c xdp_ingress.c -o /tmp/xdp_ingress.o
           readelf -S /tmp/xdp_ingress.o | grep -E '\.xdp|\.maps|license'
