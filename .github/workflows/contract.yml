@@ -181,8 +181,7 @@ jobs:
           sudo ip -n casxdp-ns1 link set casxdp1 up
 
           sudo bpftool map lookup pinned "$PIN_DIR/maps/deny_src_ipv4" key hex c6 33 64 0a
-          sudo ip netns exec casxdp-ns0 bpftool net attach xdpdrv pinned "$PIN_DIR/prog" dev casxdp0
-          sudo ip netns exec casxdp-ns0 bpftool net show dev casxdp0
+          sudo ip -n casxdp-ns0 link set dev casxdp0 xdpdrv pinned "$PIN_DIR/prog"
           sudo ip -n casxdp-ns0 -details link show dev casxdp0
 
           # Unmatched source must traverse the veth pair and reach ICMP.
@@ -204,8 +203,12 @@ jobs:
           sudo ip netns exec casxdp-ns1 ping -n -I 198.51.100.12 -c 1 -W 1 198.51.100.1
 
           # Detach and confirm the previously denied source now passes.
-          sudo ip netns exec casxdp-ns0 bpftool net detach xdpdrv dev casxdp0
-          sudo ip netns exec casxdp-ns0 bpftool net show dev casxdp0
+          sudo ip -n casxdp-ns0 link set dev casxdp0 xdpdrv off
+          sudo ip -n casxdp-ns0 -details link show dev casxdp0
+          if sudo ip -n casxdp-ns0 -details link show dev casxdp0 | grep -q 'prog/xdp id'; then
+            echo "ERROR: XDP program remains attached after detach"
+            exit 1
+          fi
           sudo ip -n casxdp-ns1 addr del 198.51.100.12/24 dev casxdp1
           sudo ip -n casxdp-ns1 addr add 198.51.100.10/24 dev casxdp1
           sudo ip netns exec casxdp-ns1 ping -n -I 198.51.100.10 -c 1 -W 1 198.51.100.1
