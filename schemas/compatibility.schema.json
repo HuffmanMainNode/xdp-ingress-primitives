@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:huffman:cas-xdp:compatibility:1.0",
+  "title": "CAS-XDP Repository Compatibility Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "project",
+    "repository",
+    "contract_version",
+    "lifecycle_state",
+    "capabilities",
+    "negative_scope",
+    "platforms",
+    "dependencies",
+    "interfaces",
+    "verification"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "project": { "type": "string", "minLength": 1 },
+    "repository": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["owner", "name", "visibility", "url"],
+      "properties": {
+        "owner": { "const": "HuffmanMainNode" },
+        "name": { "type": "string", "minLength": 1 },
+        "visibility": { "enum": ["public", "private"] },
+        "url": { "type": "string", "format": "uri" }
+      }
+    },
+    "contract_version": { "const": "1.0" },
+    "lifecycle_state": {
+      "enum": ["planned", "prototype", "implemented", "verified", "released", "deprecated"]
+    },
+    "capabilities": { "type": "array", "uniqueItems": true, "items": { "type": "string" } },
+    "negative_scope": { "type": "array", "uniqueItems": true, "items": { "type": "string" } },
+    "platforms": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["target", "status"],
+        "properties": {
+          "target": { "type": "string" },
+          "status": { "enum": ["planned", "verified", "unsupported"] },
+          "evidence": { "type": "array", "items": { "type": "string", "format": "uri-reference" } },
+          "notes": { "type": "string" }
+        }
+      }
+    },
+    "dependencies": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["build", "runtime", "optional"],
+      "properties": {
+        "build": { "type": "array", "items": { "type": "string" } },
+        "runtime": { "type": "array", "items": { "type": "string" } },
+        "optional": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "interfaces": { "type": "array", "items": { "type": "string" } },
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["highest_evidence_tier", "claims"],
+      "properties": {
+        "highest_evidence_tier": { "enum": ["none", "TIER-1", "TIER-2", "TIER-3", "TIER-4", "TIER-5"] },
+        "claims": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["claim", "status"],
+            "properties": {
+              "claim": { "type": "string" },
+              "status": { "enum": ["unverified", "verified", "unsupported"] },
+              "evidence": { "type": "array", "items": { "type": "string", "format": "uri-reference" } }
+            }
+          }
+        }
+      }
+    }
+  }
+}
