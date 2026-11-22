@@ -68,3 +68,7 @@ python3 -m unittest discover -v
 CI validates the shared contract, rule schema, 12 deterministic tests across Python 3.9 through 3.13, and BPF object compilation with Clang 18.1.3. An ephemeral Ubuntu 24.04 job loads the object into the kernel verifier, tests synthetic packets with bpftool 7.7.0, then attaches/detaches it on an isolated veth pair and checks actual ICMP pass/drop/restore behavior. No physical NIC or production interface is used.
 
 See [SECURITY.md](SECURITY.md) and [CONTRACT.md](CONTRACT.md).
+
+## Prototype release record
+
+See [PROTOTYPE-RELEASE.md](PROTOTYPE-RELEASE.md) for the verified source commit, evidence ceiling, supported prototype scope, limitations, and next milestone. This document stages a prototype handoff; it does not create a GitHub Release or claim production readiness.
