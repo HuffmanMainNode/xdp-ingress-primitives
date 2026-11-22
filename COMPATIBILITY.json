@@ -66,14 +66,14 @@
         "claim": "Twelve deterministic rule-validation and map-preview unit tests on Python 3.9 through 3.13 on Ubuntu 24.04.",
         "status": "verified",
         "evidence": [
-          "https://github.com/HuffmanMainNode/xdp-ingress-primitives/actions/runs/44977279385"
+          "https://github.com/HuffmanMainNode/xdp-ingress-primitives/actions/runs/44977338201"
         ]
       },
       {
         "claim": "BPF object compiles with Clang 18.1.3 and contains xdp, .maps, and license sections.",
         "status": "verified",
         "evidence": [
-          "https://github.com/HuffmanMainNode/xdp-ingress-primitives/actions/runs/44977279385"
+          "https://github.com/HuffmanMainNode/xdp-ingress-primitives/actions/runs/44977338201"
         ]
       },
       {
