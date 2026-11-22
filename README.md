@@ -65,6 +65,6 @@ python3 -m pip install -r requirements-test.txt
 python3 -m unittest discover -v
 ```
 
-CI validates the shared contract, rule schema, deterministic tests, and BPF object compilation. CI compilation is not kernel verifier or live attach evidence.
+CI validates the shared contract, rule schema, 12 deterministic tests across Python 3.9 through 3.13, and BPF object compilation with Clang 18.1.3. CI compilation is not kernel verifier or live attach evidence.
 
 See [SECURITY.md](SECURITY.md) and [CONTRACT.md](CONTRACT.md).
