@@ -48,7 +48,7 @@ Requires Clang with the BPF target and Linux UAPI headers:
 make
 ```
 
-This produces `xdp_ingress.o`. Compilation does not load or attach the program. Loading, map updates, interface attachment, detach, and live enforcement are intentionally not implemented in this prototype.
+This produces `xdp_ingress.o`. The repository does not include an operator-facing loader, map updater, approval/rollback controller, or production interface manager. CI separately loads the object into an ephemeral runner, tests it with synthetic packets, and attaches/detaches it in driver mode on an isolated veth pair in separate network namespaces. That CI test is not a production deployment workflow.
 
 ## Packet behavior and limits
 
@@ -65,6 +65,6 @@ python3 -m pip install -r requirements-test.txt
 python3 -m unittest discover -v
 ```
 
-CI validates the shared contract, rule schema, 12 deterministic tests across Python 3.9 through 3.13, and BPF object compilation with Clang 18.1.3. A separate ephemeral Ubuntu 24.04 CI job loads the object into the kernel verifier and runs synthetic packets with bpftool 7.7.0. This does not attach the program to an interface or test live traffic.
+CI validates the shared contract, rule schema, 12 deterministic tests across Python 3.9 through 3.13, and BPF object compilation with Clang 18.1.3. An ephemeral Ubuntu 24.04 job loads the object into the kernel verifier, tests synthetic packets with bpftool 7.7.0, then attaches/detaches it on an isolated veth pair and checks actual ICMP pass/drop/restore behavior. No physical NIC or production interface is used.
 
 See [SECURITY.md](SECURITY.md) and [CONTRACT.md](CONTRACT.md).
