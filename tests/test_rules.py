@@ -1,6 +1,7 @@
 import json
 import tempfile
 import unittest
+import jsonschema
 from pathlib import Path
 
 import xdp_rules
@@ -92,6 +93,14 @@ class XdpRuleTests(unittest.TestCase):
         }
         with self.assertRaises(xdp_rules.RuleError):
             xdp_rules.validate_rules(document)
+
+
+    def test_rule_document_matches_versioned_schema(self):
+        schema_path = Path(__file__).resolve().parents[1] / "schemas" / "ingress-rules.schema.json"
+        schema = json.loads(schema_path.read_text(encoding="utf-8"))
+        jsonschema.Draft202012Validator(
+            schema, format_checker=jsonschema.FormatChecker()
+        ).validate(self.document())
 
 
 if __name__ == "__main__":
