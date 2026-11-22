@@ -91,3 +91,81 @@ jobs:
           grep -Eq ' \.maps ' /tmp/xdp-sections.txt
           grep -Eq ' license ' /tmp/xdp-sections.txt
           readelf -sW xdp_ingress.o | grep cas_xdp_ingress
+
+  kernel-verifier:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      PIN_DIR: /sys/fs/bpf/cas-xdp-ci-${{ github.run_id }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Install bpftool
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bpftool
+          bpftool version
+      - name: Build BPF object
+        run: |
+          make clean
+          make
+      - name: Load into kernel verifier without interface attachment
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! mountpoint -q /sys/fs/bpf; then
+            sudo mount -t bpf bpf /sys/fs/bpf
+            sudo touch /tmp/cas-xdp-bpffs-mounted-by-job
+          fi
+          sudo mkdir -p "$PIN_DIR/maps"
+          sudo bpftool prog load xdp_ingress.o "$PIN_DIR/prog" type xdp pinmaps "$PIN_DIR/maps"
+          sudo bpftool prog show pinned "$PIN_DIR/prog"
+          sudo bpftool map show pinned "$PIN_DIR/maps/deny_src_ipv4"
+      - name: Test explicit drop and default pass with BPF_PROG_TEST_RUN
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo bpftool map update pinned "$PIN_DIR/maps/deny_src_ipv4" key hex c6 33 64 0a value hex 01
+          python3 - <<'PY'
+          import ipaddress
+          import struct
+          from pathlib import Path
+
+          def ipv4_frame(source):
+              ethernet = bytes.fromhex("00112233445566778899aabb0800")
+              header = struct.pack(
+                  "!BBHHHBBH4s4s",
+                  0x45, 0, 20, 1, 0, 64, 17, 0,
+                  ipaddress.IPv4Address(source).packed,
+                  ipaddress.IPv4Address("198.51.100.1").packed,
+              )
+              return ethernet + header
+
+          Path("/tmp/xdp-drop.bin").write_bytes(ipv4_frame("198.51.100.10"))
+          Path("/tmp/xdp-pass.bin").write_bytes(ipv4_frame("198.51.100.11"))
+          vlan = bytes.fromhex("00112233445566778899aabb810000000800") + ipv4_frame("198.51.100.10")[14:]
+          Path("/tmp/xdp-vlan.bin").write_bytes(vlan)
+          Path("/tmp/xdp-truncated.bin").write_bytes(bytes.fromhex("001122334455"))
+          PY
+
+          run_test() {
+            local input_file="$1"
+            local expected="$2"
+            local output
+            output=$(sudo bpftool prog run pinned "$PIN_DIR/prog" data_in "$input_file" data_out /tmp/xdp-data-out.bin repeat 1)
+            printf '%s\n' "$output"
+            grep -Eq "retval ${expected}([[:space:]]|$)" <<<"$output"
+          }
+          run_test /tmp/xdp-drop.bin 1
+          run_test /tmp/xdp-pass.bin 2
+          run_test /tmp/xdp-vlan.bin 2
+          run_test /tmp/xdp-truncated.bin 2
+      - name: Remove pinned test program and maps
+        if: always()
+        shell: bash
+        run: |
+          sudo rm -rf "$PIN_DIR"
+          if [ -f /tmp/cas-xdp-bpffs-mounted-by-job ]; then
+            sudo umount /sys/fs/bpf
+            rm -f /tmp/cas-xdp-bpffs-mounted-by-job
+          fi
