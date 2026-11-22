@@ -168,23 +168,29 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          sudo ip netns add casxdp-ns0
+          sudo ip netns add casxdp-ns1
           sudo ip link add casxdp0 type veth peer name casxdp1
-          sudo ip addr add 198.51.100.1/24 dev casxdp0
-          sudo ip addr add 198.51.100.11/24 dev casxdp1
-          sudo ip link set dev casxdp0 up
-          sudo ip link set dev casxdp1 up
+          sudo ip link set casxdp0 netns casxdp-ns0
+          sudo ip link set casxdp1 netns casxdp-ns1
+          sudo ip -n casxdp-ns0 addr add 198.51.100.1/24 dev casxdp0
+          sudo ip -n casxdp-ns1 addr add 198.51.100.11/24 dev casxdp1
+          sudo ip -n casxdp-ns0 link set lo up
+          sudo ip -n casxdp-ns1 link set lo up
+          sudo ip -n casxdp-ns0 link set casxdp0 up
+          sudo ip -n casxdp-ns1 link set casxdp1 up
 
-          sudo bpftool net attach xdpgeneric pinned "$PIN_DIR/prog" dev casxdp0
-          sudo bpftool net show dev casxdp0
-          sudo ip -details link show dev casxdp0
+          sudo ip netns exec casxdp-ns0 bpftool net attach xdpgeneric pinned "$PIN_DIR/prog" dev casxdp0
+          sudo ip netns exec casxdp-ns0 bpftool net show dev casxdp0
+          sudo ip -n casxdp-ns0 -details link show dev casxdp0
 
-          # Unmatched source must pass through the XDP hook and reach ICMP.
-          sudo ping -n -I 198.51.100.11 -c 1 -W 1 198.51.100.1
+          # Unmatched source must traverse the veth pair and reach ICMP.
+          sudo ip netns exec casxdp-ns1 ping -n -I 198.51.100.11 -c 1 -W 1 198.51.100.1
 
           # Exact source match must be dropped at ingress.
-          sudo ip addr del 198.51.100.11/24 dev casxdp1
-          sudo ip addr add 198.51.100.10/24 dev casxdp1
-          if sudo ping -n -I 198.51.100.10 -c 1 -W 1 198.51.100.1; then
+          sudo ip -n casxdp-ns1 addr del 198.51.100.11/24 dev casxdp1
+          sudo ip -n casxdp-ns1 addr add 198.51.100.10/24 dev casxdp1
+          if sudo ip netns exec casxdp-ns1 ping -n -I 198.51.100.10 -c 1 -W 1 198.51.100.1; then
             echo "ERROR: configured deny source unexpectedly received an ICMP reply"
             exit 1
           else
@@ -192,22 +198,26 @@ jobs:
           fi
 
           # Another unmatched source must still pass.
-          sudo ip addr del 198.51.100.10/24 dev casxdp1
-          sudo ip addr add 198.51.100.12/24 dev casxdp1
-          sudo ping -n -I 198.51.100.12 -c 1 -W 1 198.51.100.1
+          sudo ip -n casxdp-ns1 addr del 198.51.100.10/24 dev casxdp1
+          sudo ip -n casxdp-ns1 addr add 198.51.100.12/24 dev casxdp1
+          sudo ip netns exec casxdp-ns1 ping -n -I 198.51.100.12 -c 1 -W 1 198.51.100.1
 
           # Detach and confirm the previously denied source now passes.
-          sudo bpftool net detach xdpgeneric dev casxdp0
-          sudo bpftool net show dev casxdp0
-          sudo ip addr del 198.51.100.12/24 dev casxdp1
-          sudo ip addr add 198.51.100.10/24 dev casxdp1
-          sudo ping -n -I 198.51.100.10 -c 1 -W 1 198.51.100.1
+          sudo ip netns exec casxdp-ns0 bpftool net detach xdpgeneric dev casxdp0
+          sudo ip netns exec casxdp-ns0 bpftool net show dev casxdp0
+          sudo ip -n casxdp-ns1 addr del 198.51.100.12/24 dev casxdp1
+          sudo ip -n casxdp-ns1 addr add 198.51.100.10/24 dev casxdp1
+          sudo ip netns exec casxdp-ns1 ping -n -I 198.51.100.10 -c 1 -W 1 198.51.100.1
       - name: Remove pinned test program and maps
         if: always()
         shell: bash
         run: |
-          if command -v ip >/dev/null 2>&1 && sudo ip link show casxdp0 >/dev/null 2>&1; then
-            sudo bpftool net detach xdpgeneric dev casxdp0 >/dev/null 2>&1 || true
+          if command -v ip >/dev/null 2>&1; then
+            if sudo ip netns list | grep -q '^casxdp-ns0'; then
+              sudo ip netns exec casxdp-ns0 bpftool net detach xdpgeneric dev casxdp0 >/dev/null 2>&1 || true
+            fi
+            sudo ip netns del casxdp-ns0 >/dev/null 2>&1 || true
+            sudo ip netns del casxdp-ns1 >/dev/null 2>&1 || true
             sudo ip link del casxdp0 >/dev/null 2>&1 || true
           fi
           sudo rm -rf "$PIN_DIR"
