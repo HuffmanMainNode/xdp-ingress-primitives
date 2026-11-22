@@ -155,7 +155,7 @@ jobs:
             local output
             output=$(sudo bpftool prog run pinned "$PIN_DIR/prog" data_in "$input_file" data_out /tmp/xdp-data-out.bin repeat 1)
             printf '%s\n' "$output"
-            grep -Eq "retval ${expected}([[:space:]]|$)" <<<"$output"
+            grep -Eq "Return value: ${expected}([[:space:],]|$)" <<<"$output"
           }
           run_test /tmp/xdp-drop.bin 1
           run_test /tmp/xdp-pass.bin 2
