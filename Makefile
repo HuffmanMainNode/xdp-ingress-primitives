@@ -1,5 +1,5 @@
 CLANG ?= clang
-BPF_CFLAGS ?= -target bpf -O2 -g -Wall -Werror
+BPF_CFLAGS ?= -I/usr/include/$(shell uname -m)-linux-gnu -target bpf -O2 -g -Wall -Werror
 OUTPUT ?= xdp_ingress.o
 
 .PHONY: all clean test
