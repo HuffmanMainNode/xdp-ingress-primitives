@@ -44,14 +44,14 @@
     "build": [
       "Clang 18.1.3 with BPF target",
       "Linux UAPI headers",
-      "GNU Make"
-    ],
-    "ci": [
-      "bpftool 7.7.0 on the recorded Ubuntu 24.04 runner",
-      "jsonschema==4.23.0 for Python schema tests"
+      "GNU Make",
+      "bpftool 7.7.0 for CI-only kernel verifier and BPF_PROG_TEST_RUN checks"
     ],
     "runtime": [
-      "No operator-facing loader or map-update utility is currently included"
+      "Python standard library for offline rule validation and map preview; no operator-facing loader or map-update runtime is included"
+    ],
+    "optional": [
+      "jsonschema==4.23.0 for Python schema tests"
     ]
   },
   "interfaces": [
@@ -68,21 +68,21 @@
         "claim": "Twelve deterministic rule-validation and map-preview unit tests on Python 3.9 through 3.13 on Ubuntu 24.04.",
         "status": "verified",
         "evidence": [
-          "https://github.com/HuffmanMainNode/xdp-ingress-primitives/actions/runs/44977780363"
+          "https://github.com/HuffmanMainNode/xdp-ingress-primitives/actions/runs/44977863205"
         ]
       },
       {
         "claim": "BPF object compiles with Clang 18.1.3 and contains xdp, .maps, and license ELF sections.",
         "status": "verified",
         "evidence": [
-          "https://github.com/HuffmanMainNode/xdp-ingress-primitives/actions/runs/44977780363"
+          "https://github.com/HuffmanMainNode/xdp-ingress-primitives/actions/runs/44977863205"
         ]
       },
       {
         "claim": "Kernel BPF verifier accepted the program on Ubuntu 24.04 runner kernel 7.0.0-1014-aws; map update and synthetic BPF_PROG_TEST_RUN drop/pass cases passed with bpftool 7.7.0.",
         "status": "verified",
         "evidence": [
-          "https://github.com/HuffmanMainNode/xdp-ingress-primitives/actions/runs/44977780363"
+          "https://github.com/HuffmanMainNode/xdp-ingress-primitives/actions/runs/44977863205"
         ]
       },
       {
