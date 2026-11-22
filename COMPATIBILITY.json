@@ -71,28 +71,28 @@
         "claim": "Twelve deterministic rule-validation and map-preview unit tests on Python 3.9 through 3.13 on Ubuntu 24.04.",
         "status": "verified",
         "evidence": [
-          "https://github.com/HuffmanMainNode/xdp-ingress-primitives/actions/runs/44978484350"
+          "https://github.com/HuffmanMainNode/xdp-ingress-primitives/actions/runs/44978554223"
         ]
       },
       {
         "claim": "BPF object compiles with Clang 18.1.3 and contains xdp, .maps, and license ELF sections.",
         "status": "verified",
         "evidence": [
-          "https://github.com/HuffmanMainNode/xdp-ingress-primitives/actions/runs/44978484350"
+          "https://github.com/HuffmanMainNode/xdp-ingress-primitives/actions/runs/44978554223"
         ]
       },
       {
         "claim": "Kernel BPF verifier acceptance, map update, and synthetic BPF_PROG_TEST_RUN cases on Ubuntu 24.04 kernel 7.0.0-1014-aws.",
         "status": "verified",
         "evidence": [
-          "https://github.com/HuffmanMainNode/xdp-ingress-primitives/actions/runs/44978484350"
+          "https://github.com/HuffmanMainNode/xdp-ingress-primitives/actions/runs/44978554223"
         ]
       },
       {
         "claim": "Native XDP driver-mode attach/detach and ICMP pass/drop/restore behavior on an isolated veth pair in separate network namespaces.",
         "status": "verified",
         "evidence": [
-          "https://github.com/HuffmanMainNode/xdp-ingress-primitives/actions/runs/44978484350"
+          "https://github.com/HuffmanMainNode/xdp-ingress-primitives/actions/runs/44978554223"
         ]
       },
       {
