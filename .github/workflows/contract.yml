@@ -103,7 +103,7 @@ jobs:
       - name: Install bpftool
         run: |
           sudo apt-get update
-          sudo apt-get install -y linux-tools-common linux-tools-generic
+          sudo apt-get install -y linux-tools-common linux-tools-generic iproute2 iputils-ping
           command -v bpftool
           bpftool version
       - name: Build BPF object
@@ -164,10 +164,52 @@ jobs:
           run_test /tmp/xdp-pass.bin 2
           run_test /tmp/xdp-vlan.bin 2
           run_test /tmp/xdp-truncated.bin 2
+      - name: Test generic XDP attach and detach on an isolated veth pair
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo ip link add casxdp0 type veth peer name casxdp1
+          sudo ip addr add 198.51.100.1/24 dev casxdp0
+          sudo ip addr add 198.51.100.11/24 dev casxdp1
+          sudo ip link set dev casxdp0 up
+          sudo ip link set dev casxdp1 up
+
+          sudo bpftool net attach xdpgeneric pinned "$PIN_DIR/prog" dev casxdp0
+          sudo bpftool net show dev casxdp0
+          sudo ip -details link show dev casxdp0
+
+          # Unmatched source must pass through the XDP hook and reach ICMP.
+          sudo ping -n -I 198.51.100.11 -c 1 -W 1 198.51.100.1
+
+          # Exact source match must be dropped at ingress.
+          sudo ip addr del 198.51.100.11/24 dev casxdp1
+          sudo ip addr add 198.51.100.10/24 dev casxdp1
+          if sudo ping -n -I 198.51.100.10 -c 1 -W 1 198.51.100.1; then
+            echo "ERROR: configured deny source unexpectedly received an ICMP reply"
+            exit 1
+          else
+            echo "Expected XDP_DROP observed for 198.51.100.10"
+          fi
+
+          # Another unmatched source must still pass.
+          sudo ip addr del 198.51.100.10/24 dev casxdp1
+          sudo ip addr add 198.51.100.12/24 dev casxdp1
+          sudo ping -n -I 198.51.100.12 -c 1 -W 1 198.51.100.1
+
+          # Detach and confirm the previously denied source now passes.
+          sudo bpftool net detach xdpgeneric dev casxdp0
+          sudo bpftool net show dev casxdp0
+          sudo ip addr del 198.51.100.12/24 dev casxdp1
+          sudo ip addr add 198.51.100.10/24 dev casxdp1
+          sudo ping -n -I 198.51.100.10 -c 1 -W 1 198.51.100.1
       - name: Remove pinned test program and maps
         if: always()
         shell: bash
         run: |
+          if command -v ip >/dev/null 2>&1 && sudo ip link show casxdp0 >/dev/null 2>&1; then
+            sudo bpftool net detach xdpgeneric dev casxdp0 >/dev/null 2>&1 || true
+            sudo ip link del casxdp0 >/dev/null 2>&1 || true
+          fi
           sudo rm -rf "$PIN_DIR"
           if [ -f /tmp/cas-xdp-bpffs-mounted-by-job ]; then
             sudo umount /sys/fs/bpf
