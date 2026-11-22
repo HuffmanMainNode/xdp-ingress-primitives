@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:huffman:cas-xdp:ingress-rules:1.0",
+  "title": "CAS-XDP IPv4 Ingress Deny Rules",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "rules"],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "rules": {
+      "type": "array",
+      "maxItems": 4096,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "source_ipv4", "action"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$" },
+          "source_ipv4": { "type": "string", "format": "ipv4" },
+          "action": { "const": "drop" }
+        }
+      }
+    }
+  }
+}
