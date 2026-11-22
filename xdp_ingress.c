@@ -56,4 +56,4 @@ int cas_xdp_ingress(struct xdp_md *ctx)
     return XDP_PASS;
 }
 
-char LICENSE[] SEC("license") = "GPL";
+char LICENSE[] SEC("license") = "Apache-2.0";
