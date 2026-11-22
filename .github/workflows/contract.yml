@@ -108,6 +108,9 @@ jobs:
           bpftool version
       - name: Build BPF object
         run: |
+          uname -r
+          uname -m
+          clang --version
           make clean
           make
       - name: Load into kernel verifier without interface attachment
