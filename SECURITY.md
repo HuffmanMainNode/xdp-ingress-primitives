@@ -22,8 +22,8 @@ Compilation failure means no object was produced. Missing or unavailable XDP sup
 
 ## Verification limits
 
-- CI compilation and unit tests do not prove kernel verifier acceptance.
-- No TIER-3 privileged verifier or attach test has been performed.
+- CI now verifies kernel BPF verifier acceptance on one Ubuntu 24.04 runner kernel (7.0.0-1014-aws) and exercises synthetic packets with BPF_PROG_TEST_RUN. This is not a broad kernel support claim.
+- TIER-3 verifier and synthetic program-test evidence exists for the recorded CI kernel. No interface attachment, detach, NIC/driver, or live packet test has been performed.
 - No supported kernel minimum, NIC, driver mode, or hardware compatibility is claimed.
 - No live packet capture or operational event is claimed.
 - The BPF map is limited to 4,096 exact IPv4 entries.
