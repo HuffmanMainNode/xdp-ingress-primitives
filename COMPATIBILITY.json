@@ -10,14 +10,14 @@
   "contract_version": "1.0",
   "lifecycle_state": "prototype",
   "capabilities": [
-    "prototype: verifier-oriented Ethernet IPv4 XDP packet parser with bounds checks",
+    "prototype: verifier-accepted Ethernet IPv4 XDP parser on the recorded CI kernel",
     "prototype: exact IPv4 source-address hash map with 4096-entry capacity",
     "prototype: XDP_DROP only for explicit source-address map matches with action value 1",
-    "prototype: all unmatched, non-IPv4, VLAN-tagged, IPv6, malformed, and unsupported paths return XDP_PASS",
+    "prototype: unmatched, non-IPv4, VLAN-tagged, IPv6, malformed, and unsupported paths return XDP_PASS",
     "prototype: offline versioned IPv4 ingress rule validation and deterministic map-update preview",
-    "prototype: BPF object compilation and ELF section checks in CI",
-    "not implemented: BPF object loader or verifier invocation",
-    "not implemented: map update execution, pinning, interface attach/detach, or live enforcement",
+    "verified in CI: map update and synthetic BPF_PROG_TEST_RUN checks for drop and pass paths",
+    "not implemented: operator-facing BPF loader, map updater, map pinning lifecycle, or interface attach/detach",
+    "not verified: live interface traffic, NIC/driver compatibility, or cross-kernel support",
     "not implemented: IPv6, VLAN parsing, CIDR, transport ports, counters, or rate limiting"
   ],
   "negative_scope": [
@@ -30,54 +30,63 @@
   ],
   "platforms": [
     {
-      "target": "Ubuntu 24.04 CI build environment with Clang 18.1.3",
+      "target": "Ubuntu 24.04 GitHub Actions runner, x86_64, kernel 7.0.0-1014-aws, Clang 18.1.3, bpftool 7.7.0",
       "status": "verified",
-      "notes": "BPF object compiled and expected xdp, .maps, and license ELF sections verified in CI; Python rule tests passed on Python 3.9 through 3.13."
+      "notes": "Kernel BPF verifier accepted the program. A 4096-entry hash map was created and updated. BPF_PROG_TEST_RUN confirmed exact-match XDP_DROP and default XDP_PASS behavior for unmatched, VLAN-tagged, and truncated IPv4 test frames. No interface attachment occurred."
     },
     {
-      "target": "Runtime Linux kernels, BPF verifier, NICs, and drivers",
+      "target": "Other Linux kernels, NICs, drivers, hardware, and live interface attachment",
       "status": "planned",
-      "notes": "No program load, kernel verifier, interface attachment, or live packet test has been performed. No kernel or driver compatibility claim is made."
+      "notes": "Not tested. No broad kernel or driver compatibility claim is made."
     }
   ],
   "dependencies": {
     "build": [
-      "Clang with BPF target",
+      "Clang 18.1.3 with BPF target",
       "Linux UAPI headers",
       "GNU Make"
     ],
-    "runtime": [
-      "Linux kernel XDP support when a future loader is designed and independently verified"
+    "ci": [
+      "bpftool 7.7.0 on the recorded Ubuntu 24.04 runner",
+      "jsonschema==4.23.0 for Python schema tests"
     ],
-    "optional": [
-      "jsonschema==4.23.0 for development and CI schema validation only"
+    "runtime": [
+      "No operator-facing loader or map-update utility is currently included"
     ]
   },
   "interfaces": [
     "BPF program section: xdp",
     "BPF map: deny_src_ipv4, BPF_MAP_TYPE_HASH, 4096 entries, network-order IPv4 key, one-byte action value",
-    "CLI: xdp_rules.py validate and compile",
-    "Versioned JSON IPv4 ingress rule schema v1.0"
+    "CLI: xdp_rules.py validate and compile (preview-only)",
+    "Versioned JSON IPv4 ingress rule schema v1.0",
+    "CI-only BPF_PROG_TEST_RUN synthetic packet verification"
   ],
   "verification": {
-    "highest_evidence_tier": "TIER-2",
+    "highest_evidence_tier": "TIER-3",
     "claims": [
       {
         "claim": "Twelve deterministic rule-validation and map-preview unit tests on Python 3.9 through 3.13 on Ubuntu 24.04.",
         "status": "verified",
         "evidence": [
-          "https://github.com/HuffmanMainNode/xdp-ingress-primitives/actions/runs/44977338201"
+          "https://github.com/HuffmanMainNode/xdp-ingress-primitives/actions/runs/44977780363"
         ]
       },
       {
-        "claim": "BPF object compiles with Clang 18.1.3 and contains xdp, .maps, and license sections.",
+        "claim": "BPF object compiles with Clang 18.1.3 and contains xdp, .maps, and license ELF sections.",
         "status": "verified",
         "evidence": [
-          "https://github.com/HuffmanMainNode/xdp-ingress-primitives/actions/runs/44977338201"
+          "https://github.com/HuffmanMainNode/xdp-ingress-primitives/actions/runs/44977780363"
         ]
       },
       {
-        "claim": "Kernel verifier acceptance, load, attachment, driver compatibility, and live packet behavior.",
+        "claim": "Kernel BPF verifier accepted the program on Ubuntu 24.04 runner kernel 7.0.0-1014-aws; map update and synthetic BPF_PROG_TEST_RUN drop/pass cases passed with bpftool 7.7.0.",
+        "status": "verified",
+        "evidence": [
+          "https://github.com/HuffmanMainNode/xdp-ingress-primitives/actions/runs/44977780363"
+        ]
+      },
+      {
+        "claim": "Live interface attachment, detach, driver compatibility, and real packet traffic.",
         "status": "unverified",
         "evidence": []
       }
