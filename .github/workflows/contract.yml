@@ -1,0 +1,44 @@
+name: Contract and manifest validation
+
+on:
+  push:
+    paths: ['CONTRACT.md', 'COMPATIBILITY.json', 'schemas/compatibility.schema.json', '.github/workflows/contract.yml']
+  pull_request:
+    paths: ['CONTRACT.md', 'COMPATIBILITY.json', 'schemas/compatibility.schema.json', '.github/workflows/contract.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Verify canonical contract and schema copies
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object CONTRACT.md)" = "cd04d1046df036894a5b68796fdc007d4ab7cc82"
+          test "$(git hash-object schemas/compatibility.schema.json)" = "e565766ca037479c441ce21dd866fbb8209d7615"
+      - name: Validate compatibility manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --disable-pip-version-check 'jsonschema==4.23.0'
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          from jsonschema import Draft202012Validator, FormatChecker
+          schema = json.loads(Path("schemas/compatibility.schema.json").read_text(encoding="utf-8"))
+          manifest = json.loads(Path("COMPATIBILITY.json").read_text(encoding="utf-8"))
+          Draft202012Validator.check_schema(schema)
+          validator = Draft202012Validator(schema, format_checker=FormatChecker())
+          errors = sorted(validator.iter_errors(manifest), key=lambda e: list(e.path))
+          if errors:
+              for error in errors:
+                  print(f"ERROR at {list(error.path)}: {error.message}")
+              raise SystemExit(1)
+          print("TIER-1: compatibility manifest conforms to the shared JSON Schema.")
+          PY
