@@ -65,6 +65,6 @@ python3 -m pip install -r requirements-test.txt
 python3 -m unittest discover -v
 ```
 
-CI validates the shared contract, rule schema, 12 deterministic tests across Python 3.9 through 3.13, and BPF object compilation with Clang 18.1.3. CI compilation is not kernel verifier or live attach evidence.
+CI validates the shared contract, rule schema, 12 deterministic tests across Python 3.9 through 3.13, and BPF object compilation with Clang 18.1.3. A separate ephemeral Ubuntu 24.04 CI job loads the object into the kernel verifier and runs synthetic packets with bpftool 7.7.0. This does not attach the program to an interface or test live traffic.
 
 See [SECURITY.md](SECURITY.md) and [CONTRACT.md](CONTRACT.md).
