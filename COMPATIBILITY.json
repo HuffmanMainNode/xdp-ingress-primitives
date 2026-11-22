@@ -1,0 +1,61 @@
+{
+  "schema_version": "1.0",
+  "project": "CAS-XDP",
+  "repository": {
+    "owner": "HuffmanMainNode",
+    "name": "xdp-ingress-primitives",
+    "visibility": "public",
+    "url": "https://github.com/HuffmanMainNode/xdp-ingress-primitives"
+  },
+  "contract_version": "1.0",
+  "lifecycle_state": "planned",
+  "capabilities": [
+    "planned Linux XDP ingress packet filtering",
+    "planned bounded packet parsing",
+    "planned explicit attach and detach lifecycle",
+    "planned verifier-aware defensive rule primitives"
+  ],
+  "negative_scope": [
+    "remote exploitation",
+    "outbound scanning",
+    "brute-force routines",
+    "counter-attack and retaliation",
+    "silent privileged mutation",
+    "fabricated or simulated live operational evidence"
+  ],
+  "platforms": [
+    {
+      "target": "Linux kernel with compatible XDP support",
+      "status": "planned",
+      "notes": "No minimum kernel, driver mode, architecture, verifier result, or supported NIC has been established."
+    }
+  ],
+  "dependencies": {
+    "build": [
+      "Clang/LLVM toolchain (target; version to be pinned after reproducible build tests)",
+      "Linux kernel UAPI headers matching the tested build matrix",
+      "libbpf build interface (planned; version to be pinned)"
+    ],
+    "runtime": [
+      "Linux kernel XDP/eBPF facilities (availability must be detected)"
+    ],
+    "optional": [
+      "bpftool for diagnostics and privileged test evidence",
+      "CAP_BPF and CAP_NET_ADMIN where required by selected kernel and attach mode"
+    ]
+  },
+  "interfaces": [
+    "Versioned rule/configuration format (not yet defined)",
+    "Explicit XDP attach status and diagnostics (not yet implemented)"
+  ],
+  "verification": {
+    "highest_evidence_tier": "none",
+    "claims": [
+      {
+        "claim": "Executable behavior and platform compatibility.",
+        "status": "unverified",
+        "evidence": []
+      }
+    ]
+  }
+}
