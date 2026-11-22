@@ -8,12 +8,17 @@
     "url": "https://github.com/HuffmanMainNode/xdp-ingress-primitives"
   },
   "contract_version": "1.0",
-  "lifecycle_state": "planned",
+  "lifecycle_state": "prototype",
   "capabilities": [
-    "planned Linux XDP ingress packet filtering",
-    "planned bounded packet parsing",
-    "planned explicit attach and detach lifecycle",
-    "planned verifier-aware defensive rule primitives"
+    "prototype: verifier-oriented Ethernet IPv4 XDP packet parser with bounds checks",
+    "prototype: exact IPv4 source-address hash map with 4096-entry capacity",
+    "prototype: XDP_DROP only for explicit source-address map matches with action value 1",
+    "prototype: all unmatched, non-IPv4, VLAN-tagged, IPv6, malformed, and unsupported paths return XDP_PASS",
+    "prototype: offline versioned IPv4 ingress rule validation and deterministic map-update preview",
+    "prototype: BPF object compilation and ELF section checks in CI",
+    "not implemented: BPF object loader or verifier invocation",
+    "not implemented: map update execution, pinning, interface attach/detach, or live enforcement",
+    "not implemented: IPv6, VLAN parsing, CIDR, transport ports, counters, or rate limiting"
   ],
   "negative_scope": [
     "remote exploitation",
@@ -25,34 +30,54 @@
   ],
   "platforms": [
     {
-      "target": "Linux kernel with compatible XDP support",
+      "target": "Ubuntu 24.04 CI build environment with Clang 18.1.3",
+      "status": "verified",
+      "notes": "BPF object compiled and expected xdp, .maps, and license ELF sections verified in CI; Python rule tests passed on Python 3.9 through 3.13."
+    },
+    {
+      "target": "Runtime Linux kernels, BPF verifier, NICs, and drivers",
       "status": "planned",
-      "notes": "No minimum kernel, driver mode, architecture, verifier result, or supported NIC has been established."
+      "notes": "No program load, kernel verifier, interface attachment, or live packet test has been performed. No kernel or driver compatibility claim is made."
     }
   ],
   "dependencies": {
     "build": [
-      "Clang/LLVM toolchain (target; version to be pinned after reproducible build tests)",
-      "Linux kernel UAPI headers matching the tested build matrix",
-      "libbpf build interface (planned; version to be pinned)"
+      "Clang with BPF target",
+      "Linux UAPI headers",
+      "GNU Make"
     ],
     "runtime": [
-      "Linux kernel XDP/eBPF facilities (availability must be detected)"
+      "Linux kernel XDP support when a future loader is designed and independently verified"
     ],
     "optional": [
-      "bpftool for diagnostics and privileged test evidence",
-      "CAP_BPF and CAP_NET_ADMIN where required by selected kernel and attach mode"
+      "jsonschema==4.23.0 for development and CI schema validation only"
     ]
   },
   "interfaces": [
-    "Versioned rule/configuration format (not yet defined)",
-    "Explicit XDP attach status and diagnostics (not yet implemented)"
+    "BPF program section: xdp",
+    "BPF map: deny_src_ipv4, BPF_MAP_TYPE_HASH, 4096 entries, network-order IPv4 key, one-byte action value",
+    "CLI: xdp_rules.py validate and compile",
+    "Versioned JSON IPv4 ingress rule schema v1.0"
   ],
   "verification": {
-    "highest_evidence_tier": "none",
+    "highest_evidence_tier": "TIER-2",
     "claims": [
       {
-        "claim": "Executable behavior and platform compatibility.",
+        "claim": "Twelve deterministic rule-validation and map-preview unit tests on Python 3.9 through 3.13 on Ubuntu 24.04.",
+        "status": "verified",
+        "evidence": [
+          "https://github.com/HuffmanMainNode/xdp-ingress-primitives/actions/runs/44977279385"
+        ]
+      },
+      {
+        "claim": "BPF object compiles with Clang 18.1.3 and contains xdp, .maps, and license sections.",
+        "status": "verified",
+        "evidence": [
+          "https://github.com/HuffmanMainNode/xdp-ingress-primitives/actions/runs/44977279385"
+        ]
+      },
+      {
+        "claim": "Kernel verifier acceptance, load, attachment, driver compatibility, and live packet behavior.",
         "status": "unverified",
         "evidence": []
       }
